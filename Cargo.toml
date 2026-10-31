@@ -1,0 +1,40 @@
+[package]
+name = "phi-ns"
+version = "0.1.0"
+edition = "2024"
+description = "NamespaceProvider contract, built-in sh.* pack, and the shared audit Gate for the phi family"
+license = "MIT"
+repository = "https://github.com/hibuka-labs/phi-ns"
+readme = "README.md"
+keywords = ["agent", "capability", "codeact"]
+categories = ["development-tools"]
+
+[dependencies]
+phi-cap = { version = "0.1.0" }
+async-trait = "0.1"
+thiserror = "2"
+serde_json = "1"
+serde = { version = "1", features = ["derive"], optional = true }
+# image wire codec (`ImageRef::to_wire` / `from_wire`, sdk-assembly §4.2)
+base64 = "0.23"
+# builtin-shell runs commands via async process I/O; ProcessTransport adds its
+# own deadlines (`tokio::time`)
+tokio = { version = "1", features = ["process", "time"], optional = true }
+# production Transport: correlated JSON-lines subprocess — wraps the phi wire
+# client's process transport per sdk-assembly §3.5 ("wrap it, don't rewrite
+# it"). The wire is the hibuka-labs fork of the OpenGCUA mu-* crates
+# (Apache-2.0), published as phi-wire-* so it resolves on crates.io.
+phi-wire-client = { version = "0.1.0", optional = true }
+phi-wire-protocol = { version = "0.1.0", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[features]
+default = ["builtin-shell", "remote"]
+# the built-in `sh.*` pack (sdk-assembly §5.1)
+builtin-shell = ["dep:tokio"]
+# RemoteNs + Gate + ProcessTransport for IPC capability packs (sdk-assembly §3.5, O16)
+remote = ["dep:tokio", "dep:phi-wire-client", "dep:phi-wire-protocol"]
+# wire formats for shared types
+serde = ["dep:serde", "phi-cap/serde"]
